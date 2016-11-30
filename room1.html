@@ -1,0 +1,163 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Room1 - Kitrak chat</title>
+
+
+
+     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<!-- Optional theme -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+
+  <link rel="stylesheet" href="stylesheets/custom.css">
+
+<script
+        src="https://code.jquery.com/jquery-2.2.4.js"
+        integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="
+        crossorigin="anonymous"></script>
+
+
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+    
+
+    <script src="javascripts/jquery.cookie.js" type="text/javaScript" ></script>
+    
+
+    <script type="text/javascript">
+    if(!$.cookie("username")) {
+      window.location="/name.html"
+    }
+    </script>
+
+  </head>
+  <body>
+<div class="container">
+    <div class="row chat-window col-xs-12 col-md-12" id="chat_window_1" >
+        <div class="col-xs-12 col-md-12">
+<button id="disconnect">Logout</button>
+
+          <div class="panel panel-default">
+                <div class="panel-heading top-bar">
+                    <div class="col-md-8 col-xs-8">
+                        <h3 class="panel-title"><span class="glyphicon glyphicon-comment"></span> Chat Room</h3>
+                    </div>
+                </div>
+                <ul class="panel-body msg_container_base" id="messages">
+
+                </ul>
+                <ul id="joined"></ul>
+                <ul id="typing"></ul>
+
+                <div class="panel-footer">
+                    <div class="input-group">
+                        <input id="m" type="text" class="form-control input-sm chat_input" placeholder="Write your message here..." />
+                        <span class="input-group-btn">
+                        <button type="submit" class="btn btn-primary btn-sm" id="btn-chat">Send</button>
+                        </span>
+                    </div>
+                </div>
+        </div>
+        </div>
+    </div>
+
+    
+<!-- <script src="https://cdn.firebase.com/js/client/2.2.3/firebase.js"></script> -->
+
+
+<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase.js"></script>
+ 
+<script>
+  var app = firebase.initializeApp({
+    apiKey: "AIzaSyBao9Ef88QQpqiRUrW8w1iN8UJOIy8I2js",
+    authDomain: "test-project-bbbe5.firebaseapp.com",
+    databaseURL: "https://test-project-bbbe5.firebaseio.com",
+    storageBucket: "test-project-bbbe5.appspot.com",
+    messagingSenderId: "485177425530"
+  });
+
+  // ...
+</script>
+
+
+<script>
+  // Initialize Firebase
+  //create firebase reference
+/*var dbRef = new Firebase("https://test-project-bbbe5.firebaseio.com");
+
+var contactsRef = dbRef.child('users')
+
+//load older conatcts as well as any newly added one...
+contactsRef.on("child_added", function(snap) {
+  console.log("added", snap.key(), snap.val());
+});*/
+
+
+firebase.database().ref('/chats').once('value').then(function(snapshot) {
+  $.each(snapshot.val(), function(idx, obj) {
+      $('#messages').append($('<li>').html('<div class="row msg_container"><div class="col-xs-12 col-md-12"><div class="messages base_sent"><p>'+obj.user+" : "+obj.message+'</p></div></div></div>'));
+  });
+   var chatwindow=$('#messages');
+         chatwindow.scrollTop(chatwindow[0].scrollHeight);
+});
+
+firebase.database().ref('/chats').on("child_added", function(snap) {
+  $('#messages').append($('<li>').html('<div class="row msg_container"><div class="col-xs-12 col-md-12"><div class="messages base_sent"><p>'+snap.val().user+" : "+snap.val().message+'</p></div></div></div>'));
+     var chatwindow=$('#messages');
+         chatwindow.scrollTop(chatwindow[0].scrollHeight);
+});
+
+</script>
+
+
+<script>
+function sendMessage() {
+      if($('#m').val()) {
+          // Send Message 
+            var date = new Date();
+            var postData = {
+              user: $.cookie("username"),
+              message: $('#m').val(),
+              datetime : date
+            };
+
+             // Get a key for a new Post.
+              var newPostKey = firebase.database().ref().child('chats').push().key;
+
+              // Write the new post's data simultaneously in the posts list and the user's post list.
+              var updates = {};
+              updates['/chats/' + newPostKey] = postData;
+              firebase.database().ref().update(updates);
+
+              $('#m').val('');
+              return false;
+        } else {
+          alert("Please enter message");
+          return false;
+        }
+}
+  $(document).ready(function() {
+
+      $('#m').keyup(function(e){
+        if(e.keyCode == 13)
+        {
+          sendMessage();
+        }
+      });
+
+      $('#btn-chat').click(function(){
+        sendMessage();
+      });
+
+      $('#disconnect').click(function(){
+          $.removeCookie("username");
+          window.location = '/name.html';
+      });
+
+    });
+</script>
+  </body>
+</html>
